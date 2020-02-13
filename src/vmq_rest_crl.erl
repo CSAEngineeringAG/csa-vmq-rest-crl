@@ -2,8 +2,6 @@
 
 -behaviour(gen_server).
 
--define(CRL_API, os:getenv("CRL_API_URL")).
-
 %% API
 -export([start_link/0,
         init/1,
@@ -51,8 +49,10 @@ schedule_crl_poll_tick() ->
     end.
 
 poll_crl() ->
-    %%TODO: plugin config schema
-    {ok, {{Version, 200, ReasonPhrase}, Headers, Body}} = httpc:request(get, {?CRL_API, []}, [], []),
+    {ok, CrlConfigs} = application:get_env(vmq_rest_crl, endpoints),
+    {_, Map} = lists:nth(1, CrlConfigs),
+    Url = maps:get(url, Map),
+    {ok, {{Version, 200, ReasonPhrase}, Headers, Body}} = httpc:request(get, {Url, []}, [], []),
     Data = jsx:decode(unicode:characters_to_binary(Body)),
     CRL = proplists:get_value(<<"result">>, Data),
     if 

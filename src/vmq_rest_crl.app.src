@@ -9,7 +9,7 @@
 	inets
    ]},
   {env,[
-      {endpoints, {[]}, []}
+      {endpoints, []}
   ]},
   {modules, []},
 
