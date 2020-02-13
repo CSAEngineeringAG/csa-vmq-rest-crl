@@ -16,8 +16,13 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
--spec init([]) -> {'ok', {{'one_for_one', 5, 10},
-                         [{atom(), {atom(), atom(), list()},
-                           permanent, pos_integer(), worker, [atom()]}]}}.
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [?CHILD(vmq_rest_crl, worker, [])]} }.
+    {ok, CrlConfigs} = application:get_env(vmq_rest_crl, endpoints),
+    Children = [get_children(H) || H <- CrlConfigs],
+    {ok, { {one_for_one, 5, 10}, Children } }.
+
+get_children({_, Map}) ->
+    [CrlFile, Name, Refresh, Url] = maps:values(Map),
+    {{vmq_rest_crl, Name},
+                 {vmq_rest_crl, start_link, [Name, Url, CrlFile, Refresh]},
+                 permanent, 5000, worker, [vmq_rest_crl]}.
