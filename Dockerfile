@@ -1,6 +1,5 @@
 FROM vernemq/vernemq
 COPY . /etc/plugins/crl
-COPY priv/crl.pem /etc/ssl/crl.pem
 COPY priv/vmq_rest_crl.schema /vernemq/share/schema/40-vmq_rest_crl.schema
 ENV DOCKER_VERNEMQ_ACCEPT_EULA=yes
 ENV DOCKER_VERNEMQ_vmq_rest_crl.default=on
