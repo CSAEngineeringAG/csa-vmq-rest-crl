@@ -51,14 +51,13 @@ schedule_crl_poll_tick() ->
 poll_crl() ->
     {ok, CrlConfigs} = application:get_env(vmq_rest_crl, endpoints),
     {_, Map} = lists:nth(1, CrlConfigs),
-    Url = maps:get(url, Map),
-    {ok, {{Version, 200, ReasonPhrase}, Headers, Body}} = httpc:request(get, {Url, []}, [], []),
-    Data = jsx:decode(unicode:characters_to_binary(Body)),
-    CRL = proplists:get_value(<<"result">>, Data),
-    if 
-        CRL =:= undefined -> error_logger:info_msg("could not parse CRL from API");
-        true ->
-            Current = calendar:local_time(),
-            {_, {H, M, S}} = Current,
-            io:format("~2..0b:~2..0b:~2..0b [info] ~s ~p\n", [H, M, S, CRL, "polling"])
+    [CrlFile, _, _, Url] = maps:values(Map),
+    {ok, {{_, 200, _}, _, Body}} = httpc:request(get, {Url, []}, [], []),
+    [{_, Success}, {_, CRL}, _, _] = jsx:decode(unicode:characters_to_binary(Body)),
+    case {Success, CRL} of 
+        {false, _} -> error_logger:info_msg("API call failed");
+        {true, undefined} -> error_logger:info_msg("could not parse CRL from API");
+        {true, _} ->
+            io:format("success"),
+            ok = file:write_file(CrlFile, CRL)
     end.
