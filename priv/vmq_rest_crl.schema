@@ -1,0 +1,77 @@
+%%-*- mode: erlang -*-
+%% ex: ft=erlang
+
+{mapping, "vmq_rest_crl.$name", "vmq_rest_crl.endpoints", [
+    {datatype, flag},
+    {commented, on}
+  ]}.
+
+{mapping, "vmq_rest_crl.$name.refresh_interval", "vmq_rest_crl.endpoints", [
+  {default, 60000},
+  {datatype, integer},
+  {validators, ["non-neg-integer"]},
+  hidden,
+  {include_default, "default"}
+]}.
+
+{mapping, "vmq_rest_crl.$name.crlfile", "vmq_rest_crl.endpoints", [
+  {datatype, file},
+  {validators, ["file-exists", "file-is-readable"]},
+  hidden,
+  {include_default, "default"}
+  ]}.
+
+{mapping, "vmq_rest_crl.$name.priority", "vmq_rest_crl.endpoints", [
+  {datatype, integer},
+  {commented, "5"},
+  {include_default, "default"}
+  ]}.
+
+{mapping, "vmq_rest_crl.$name.url", "vmq_rest_crl.endpoints", [
+  {datatype, string},
+  hidden,
+  {include_default, "default"}
+]}.
+
+{translation,
+ "vmq_rest_crl.endpoints",
+ fun(Conf) ->
+         EndpointNames =
+             proplists:get_all_values(
+               "$name",
+               cuttlefish_variable:fuzzy_matches(["vmq_rest_crl", "$name"], Conf)),
+         EnabledEndpoints =
+             lists:filter(fun(Name) ->
+                                  cuttlefish:conf_get("vmq_rest_crl." ++ Name, Conf, false)
+                          end,
+                          EndpointNames),
+         Endpoints =
+             [ {cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".priority", Conf, Name),
+                #{refresh => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".refresh_interval", Conf, undefined),
+                  crlfile => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".crlfile", Conf, undefined),
+                  url => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".url", Conf, undefined),
+                  name => erlang:list_to_atom(Name)}}
+               || Name <- EnabledEndpoints ],
+         lists:keysort(1, Endpoints)
+ end}.
+
+{validator, "file-exists", "file does not exist",
+ fun("") ->
+         %% "" is used as the default value in most places, we should
+         %% not error out because of that.
+         true;
+    (Name) -> vmq_schema_util:file_exists(Name)
+ end}.
+
+{validator, "file-is-readable", "file is not readable, check permissions",
+ fun("") ->
+         %% "" is used as the default value in most places, we should
+         %% not error out because of that.
+         true;
+    (Name) -> vmq_schema_util:file_is_readable(Name)
+ end}.
+
+{validator, "non-neg-integer", "must be a non-negative integer",
+ fun(Integer) ->
+         Integer >= 0
+ end}.
