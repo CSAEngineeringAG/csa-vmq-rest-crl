@@ -67,9 +67,9 @@ Set the refresh interval in **milliseconds** of the agent (default: 60'000 = 1 m
 
     vmq_rest_crl.default.refresh_interval=10000
 
-Set the CRL file which should be updated after a successfull API call. This file should correspond to the CRL file you define in the SSL listener config of [VerneMQ](https://github.com/vernemq/vernemq/blob/master/apps/vmq_server/priv/vmq_server.schema#L1227)
+Set the CRL file which should be updated after a successfull API call. This file should correspond to the CRL file you define in the SSL listener config of [VerneMQ](https://github.com/vernemq/vernemq/blob/master/apps/vmq_server/priv/vmq_server.schema#L1227) and you will need **write** permissions:
 
-    vmq_rest_crl.default.crlfile=/etc/ssl/crl.pem
+    vmq_rest_crl.default.crlfile=/etc/ssl/revoke.crl
 
 
 ### Additional Agents
