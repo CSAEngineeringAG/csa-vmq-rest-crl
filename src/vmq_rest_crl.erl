@@ -53,9 +53,11 @@ schedule_crl_poll_tick(Timeout) ->
 poll_crl(Url, CrlFile) ->
     {ok, {{_, 200, _}, _, Body}} = httpc:request(get, {Url, []}, [], []),
     [{_, Success}, {_, CRL}, _, _] = jsx:decode(unicode:characters_to_binary(Body)),
+    PemHeader = unicode:characters_to_binary("-----BEGIN X509 CRL-----\n"),
+    PemFooter = unicode:characters_to_binary("\n-----END X509 CRL-----"),
     case {Success, CRL} of 
         {false, _} -> error_logger:info_msg("API call failed");
         {true, undefined} -> error_logger:info_msg("could not parse CRL from API");
         {true, _} ->
-            ok = file:write_file(CrlFile, CRL)
+            ok = file:write_file(CrlFile, [PemHeader, CRL, PemFooter])
     end.
