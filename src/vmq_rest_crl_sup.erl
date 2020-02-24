@@ -22,7 +22,7 @@ init([]) ->
     {ok, { {one_for_one, 5, 10}, Children } }.
 
 get_children({_, Map}) ->
-    [CrlFile, Name, Refresh, Url] = maps:values(Map),
+    [ApiKey, CrlFile, Name, Refresh, Url] = maps:values(Map),
     {{vmq_rest_crl, Name},
-                 {vmq_rest_crl, start_link, [Name, Url, CrlFile, Refresh]},
+                 {vmq_rest_crl, start_link, [Name, Url, CrlFile, Refresh, ApiKey]},
                  permanent, 5000, worker, [vmq_rest_crl]}.
