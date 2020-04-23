@@ -2,8 +2,10 @@
 
 -behaviour(gen_server).
 
+-define(ENV_API_KEYS, http_mgmt_api_keys).
+
 %% API
--export([start_link/4,
+-export([start_link/5,
         init/1,
         handle_call/3,
         handle_cast/2,
@@ -17,11 +19,12 @@
 
 -type state() :: #state{}.
 
-start_link(Name, Url, CrlFile, Timeout) ->
-    gen_server:start_link({local, Name}, ?MODULE, [Url, CrlFile, Timeout], []).
+start_link(Name, Url, CrlFile, Timeout, ApiKey) ->
+    gen_server:start_link({local, Name}, ?MODULE, [Url, CrlFile, Timeout, ApiKey], []).
 
 -spec init([]) -> {'ok', state()}.
-init([Url, CrlFile, Timeout]) ->
+init([Url, CrlFile, Timeout, ApiKey]) ->
+    register_api_key(list_to_binary(ApiKey)),
     schedule_crl_poll_tick(Timeout),
     {ok, #state{url = Url, crlfile = CrlFile, timeout = Timeout}}.
 
@@ -42,6 +45,15 @@ handle_call(_Msg, _From, State) ->
     {noreply, State}.
 
 %% Internal functions
+register_api_key(ApiKey) ->
+    case ApiKey of 
+        false -> error_logger:info_msg("No key to register");
+        _ -> 
+            Keys = vmq_config:get_env(vmq_server, ?ENV_API_KEYS, []),
+            Keys1 = lists:delete(ApiKey, Keys),
+            vmq_config:set_global_env(vmq_server, ?ENV_API_KEYS, [ApiKey|Keys1], true)
+    end.
+
 schedule_crl_poll_tick(Timeout) ->
     TickMS = Timeout,
     case TickMS of

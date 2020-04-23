@@ -27,6 +27,12 @@
   {include_default, "default"}
   ]}.
 
+{mapping, "vmq_rest_crl.$name.apikey", "vmq_rest_crl.endpoints", [
+  {datatype, string},
+  hidden,
+  {include_default, "default"}
+  ]}.
+
 {mapping, "vmq_rest_crl.$name.url", "vmq_rest_crl.endpoints", [
   {datatype, string},
   hidden,
@@ -49,6 +55,7 @@
              [ {cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".priority", Conf, Name),
                 #{refresh => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".refresh_interval", Conf, undefined),
                   crlfile => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".crlfile", Conf, undefined),
+                  apikey => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".apikey", Conf, undefined),
                   url => cuttlefish:conf_get("vmq_rest_crl." ++ Name ++ ".url", Conf, undefined),
                   name => erlang:list_to_atom(Name)}}
                || Name <- EnabledEndpoints ],
